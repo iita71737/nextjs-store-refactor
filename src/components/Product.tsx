@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/commons/helper';
 import Panel from '@/components/Panel';
 import EditInventory from '@/components/EditInventory';
 import axios from '@/commons/axios';
 import { toast } from 'react-toastify';
-import { useAuth } from '@/context/AuthContext';
+import { auth } from '@/commons/auth';
 
 interface ProductProps {
   product: {
@@ -24,12 +23,8 @@ interface ProductProps {
 }
 
 const Product: React.FC<ProductProps> = ({ product, delete: deleteProduct, update, updateCartNum }) => {
-  const router = useRouter();
-  const { user, isLoggedIn } = useAuth(); // 使用 Context 獲取用戶數據
 
   const toEdit = useCallback(() => {
-    if (user?.type !== 1) return;
-
     Panel.open({
       component: EditInventory,
       props: {
@@ -42,20 +37,20 @@ const Product: React.FC<ProductProps> = ({ product, delete: deleteProduct, updat
         }
       },
     });
-  }, [user, product, deleteProduct, update]);
+  }, [product, deleteProduct, update]);
 
   const addCart = useCallback(async () => {
-    if (!isLoggedIn) {
+    if (!auth.isLogin()) {
       router.push('/login');
       toast.info('Please Login First');
       return;
     }
 
     try {
+      const user = auth.getUser() || {};
       const { id, name, image, price } = product;
       const res = await axios.get(`/carts?productId=${id}`);
       const carts = res.data;
-
       if (carts && carts.length > 0) {
         const cart = carts[0];
         cart.mount += 1;
@@ -71,15 +66,15 @@ const Product: React.FC<ProductProps> = ({ product, delete: deleteProduct, updat
         };
         await axios.post('/carts', cart);
       }
-
       toast.success('Add Cart Success');
       updateCartNum();
     } catch (error) {
       toast.error('Add Cart Failed');
     }
-  }, [isLoggedIn, user, product, updateCartNum, router]);
+  }, [product, updateCartNum]);
 
   const renderManagerBtn = useCallback(() => {
+    const user = auth.getUser() || {};
     if (user?.type === 1) {
       return (
         <div className="p-head has-text-right" onClick={toEdit}>
@@ -89,7 +84,7 @@ const Product: React.FC<ProductProps> = ({ product, delete: deleteProduct, updat
         </div>
       );
     }
-  }, [user, toEdit]);
+  }, [toEdit]);
 
   const { name, image, tags, price, status } = product;
   const productClass = status === 'available' ? 'product' : 'product out-stock';

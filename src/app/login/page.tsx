@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import axios from '@/commons/axios';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { NextResponse } from 'next/server';
+import { auth } from '@/commons/auth';
 
 export default function Login() {
   const router = useRouter();
@@ -15,20 +15,25 @@ export default function Login() {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const { setToken } = useAuth(); 
 
   const onSubmit = async (data: { email: string; password: string }) => {
     try {
       const { email, password } = data;
-      const res = await axios.post('/auth/login', { email, password });
-      console.log(res,'res');
-      const jwToken = res.data;
-      setToken(jwToken); // 設置 Token
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      const jwToken = response.data;
+      auth.setToken(jwToken)
       toast.success('Login Success');
       router.push('/'); // 跳轉到首頁
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Login Failed';
-      toast.error(message);
+      toast.error(error);
+      return NextResponse.json({ message: 'Internal server error' }, { status: 500 });
     }
   };
 

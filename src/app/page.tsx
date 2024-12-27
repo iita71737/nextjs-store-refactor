@@ -1,7 +1,7 @@
-import Products from '@/components/Products';
+import Products from '@/app/products/page';
 
 export default function Home() {
   return (
-      <Products />
+    <Products/>
   );
 }

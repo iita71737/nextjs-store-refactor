@@ -1,33 +1,33 @@
-'use client'; // 明確標記為客戶端組件
+'use client';
 
-import React, { useState, ReactNode, useCallback } from 'react';
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 
 interface PanelProps {
-  isOpen: boolean;
-  onClose: (data?: any) => void;
-  children?: ReactNode;
+    children: React.ReactNode;
+    onClose?: () => void;
 }
 
-const Panel: React.FC<PanelProps> = ({ isOpen, onClose, children }) => {
-  const closePanel = useCallback(() => {
-    onClose();
-  }, [onClose]);
-
-  const panelClass = isOpen ? 'panel-wrapper active' : 'panel-wrapper';
-
-  return (
-    <div className={panelClass}>
-      <div className="over-layer" onClick={closePanel}></div>
-      <div className="panel">
-        <div className="head">
-          <span className="close" onClick={closePanel}>
-            ×
-          </span>
-        </div>
-        <div className="content">{children}</div>
-      </div>
-    </div>
-  );
+const Panel: React.FC<PanelProps> = ({ children, onClose }) => {
+    return ReactDOM.createPortal(
+        <div className="panel-wrapper active">
+            <div
+                className="over-layer"
+                onClick={() => onClose && onClose()} // 點擊背景關閉
+            ></div>
+            <div className="panel">
+                <div className="head">
+                    <span className="close" onClick={() => onClose && onClose()}>
+                        ×
+                    </span>
+                </div>
+                <div className="content">
+                    {children}
+                </div>
+            </div>
+        </div>,
+        document.body
+    );
 };
 
 export default Panel;

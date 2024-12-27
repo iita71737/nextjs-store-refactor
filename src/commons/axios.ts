@@ -1,4 +1,5 @@
 import _axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { auth } from '@/commons/auth';
 
 const axios = (baseURL?: string): AxiosInstance => {
   const instance = _axios.create({
@@ -9,7 +10,7 @@ const axios = (baseURL?: string): AxiosInstance => {
   // 添加 request 攔截器
   instance.interceptors.request.use(
     (config: AxiosRequestConfig) => {
-      const jwToken = global?.auth?.getToken?.();
+      const jwToken = auth?.getToken();
       if (jwToken) {
         config.headers = {
           ...config.headers,
